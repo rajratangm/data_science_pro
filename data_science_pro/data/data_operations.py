@@ -1,3 +1,7 @@
+import pandas as pd
+from sklearn.preprocessing import StandardScaler, MinMaxScaler, OneHotEncoder, LabelEncoder
+from imblearn.over_sampling import SMOTE
+
 class DataOperations:
     def preprocess(self, df, target_col=None, cardinality_thresh=50, na_thresh=0.5):
         """
@@ -8,8 +12,6 @@ class DataOperations:
         - Encode all object/categorical columns except target
         - Drop any columns that are still not numeric
         """
-        import pandas as pd
-        from sklearn.preprocessing import LabelEncoder
         # 1. Drop high cardinality columns
         high_card_cols = [col for col in df.columns if df[col].nunique() > cardinality_thresh and col != target_col]
         df = df.drop(columns=high_card_cols)
@@ -32,9 +34,6 @@ class DataOperations:
         non_numeric_cols = [col for col in df.columns if col != target_col and not pd.api.types.is_numeric_dtype(df[col])]
         df = df.drop(columns=non_numeric_cols)
         return df
-    import pandas as pd
-    from sklearn.preprocessing import StandardScaler, MinMaxScaler, OneHotEncoder
-    from imblearn.over_sampling import SMOTE
 
     def drop_columns(self, df, columns):
         """Drop specified columns from DataFrame."""
