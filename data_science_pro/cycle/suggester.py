@@ -1,4 +1,4 @@
-from ..api import llm_connector
+from data_science_pro.api import llm_connector
 from langchain.memory import ConversationBufferMemory
 
 class Suggester:

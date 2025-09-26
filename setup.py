@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name='data_science_pro',
-    version='0.1.6',
+    version='0.1.7',
     description='LLM-powered modular data science pipeline',
     long_description=long_description,
     long_description_content_type='text/markdown',
@@ -22,7 +22,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'data-science-pro=pipeline:main'
+            'data-science-pro=data_science_pro.pipeline:main'
         ]
     },
     python_requires='>=3.8',
