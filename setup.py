@@ -5,11 +5,11 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name='data_science_pro',
-    version='0.1.4',
+    version='0.1.5',
     description='LLM-powered modular data science pipeline',
     long_description=long_description,
     long_description_content_type='text/markdown',
-    author='Your Name',
+    author='Rajratan More',
     packages=find_packages(),
     install_requires=[
         'pandas',

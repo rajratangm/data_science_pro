@@ -1,25 +1,3 @@
-# Add a CLI entrypoint
-def main():
-    import argparse
-    parser = argparse.ArgumentParser(description='Run the LLM-powered data science pipeline.')
-    parser.add_argument('--data', type=str, required=True, help='Path to the dataset file')
-    parser.add_argument('--target', type=str, required=True, help='Target column name')
-    parser.add_argument('--api_key', type=str, required=True, help='OpenAI API key')
-    args = parser.parse_args()
-
-    pipeline = DataSciencePro(api_key=args.api_key)
-    pipeline.input_data(args.data, args.target)
-    print('Initial report:', pipeline.report())
-    # Example: run preprocessing, training, evaluation
-    pipeline.apply_action('drop_na')
-    pipeline.apply_action('encode_categorical')
-    pipeline.apply_action('scale_numeric')
-    pipeline.set_model('randomforest', {'n_estimators': 100})
-    pipeline.train()
-    print('Evaluation:', pipeline.evaluate())
-
-if __name__ == '__main__':
-    main()
 from api.llm_connector import LLMConnector
 from data.data_loader import DataLoader
 from data.data_analyzer import DataAnalyzer
