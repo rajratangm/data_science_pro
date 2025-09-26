@@ -1,4 +1,4 @@
-from api import llm_connector
+from ..api import llm_connector
 from langchain.memory import ConversationBufferMemory
 
 class Suggester:

@@ -1,4 +1,4 @@
-from api import llm_connector
+from ..api import llm_connector
 class ReportGenerator:
     
     def generate_report(self, analysis_results, model_performance= False):
