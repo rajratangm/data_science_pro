@@ -1,0 +1,8 @@
+pandas
+numpy
+scikit-learn
+imblearn
+joblib
+langchain
+python-dotenv
+openai
