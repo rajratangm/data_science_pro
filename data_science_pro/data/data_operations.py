@@ -43,8 +43,9 @@ class DataOperations:
         """Scale specified columns using Standard or MinMax scaler."""
         scaler = StandardScaler() if method == 'standard' else MinMaxScaler()
         cols = columns if columns else df.select_dtypes(include='number').columns
-        df[cols] = scaler.fit_transform(df[cols])
-        return df
+        df_scaled = df.copy()
+        df_scaled[cols] = scaler.fit_transform(df[cols])
+        return df_scaled
 
     def encode(self, df, columns=None):
         """One-hot encode specified categorical columns."""

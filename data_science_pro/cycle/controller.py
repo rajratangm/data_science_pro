@@ -614,3 +614,6 @@ class InteractiveController(IntelligentController):
 class Controller(InteractiveController):
     """Enhanced controller with intelligent workflow management."""
     pass
+
+# Alias for backward compatibility
+CycleController = Controller

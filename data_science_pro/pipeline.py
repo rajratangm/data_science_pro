@@ -19,22 +19,27 @@ class DataSciencePro:
         self.data = None
         self.target_col = None
         self.analyzer = DataAnalyzer()
-        self.suggester = Suggester(api_key=api_key)  # Pass API key here
+        self.suggester = Suggester(api_key=api_key)  # API key is optional
         self.operations = DataOperations()
         self.model_plan = None
         self.model_instance = None  # Renamed to avoid conflict with method
         self.trainer = Trainer()
         self.evaluator = Evaluator()
         self.registry = Registry()
+        self.controller = None  # Will be initialized when api() is called
         self.X_train = None
         self.y_train = None
         self.X_test = None
         self.y_test = None
 
-    def api(self, api_key):
+    def api(self, api_key: str = None):
         """Initializes LangChain LLM + memory."""
-        self.llm = LLMConnector(api_key)
+        if api_key:
+            self.llm = LLMConnector(api_key)
         self.memory = []
+        # Initialize controller with API key for enhanced workflows
+        from data_science_pro.cycle.controller import IntelligentController
+        self.controller = IntelligentController()
 
     def input_data(self, file_path, target_col):
         """Loads dataset via DataLoader."""
@@ -290,14 +295,18 @@ class DataSciencePro:
             self.data = self.operations.drop_columns(self.data, constant_cols)
         elif action_id == 'drop_high_na':
             thresh = len(self.data) * 0.5
-            high_na_cols = [col for col in self.data.columns if self.data[col] != self.target_col and self.data[col].isna().sum() > thresh]
+            high_na_cols = [col for col in self.data.columns if col != self.target_col and self.data[col].isna().sum() > thresh]
             self.data = self.operations.drop_columns(self.data, high_na_cols)
         elif action_id == 'fill_na':
             for col in self.data.columns:
                 if self.data[col].dtype in ['float64', 'int64']:
                     self.data[col] = self.data[col].fillna(self.data[col].median())
                 else:
-                    self.data[col] = self.data[col].fillna(self.data[col].mode()[0])
+                    mode_values = self.data[col].mode()
+                    if len(mode_values) > 0:
+                        self.data[col] = self.data[col].fillna(mode_values[0])
+                    else:
+                        self.data[col] = self.data[col].fillna('unknown')
         elif action_id == 'encode_categorical':
             # One-hot encode all object columns except target
             cols = [col for col in self.data.select_dtypes(include='object').columns if col != self.target_col]
@@ -339,8 +348,27 @@ class DataSciencePro:
     def evaluate(self):
         """Evaluates ML model."""
         if self.model_instance is not None and self.X_test is not None and self.y_test is not None:
-            y_pred = self.model_instance.predict(self.X_test)
-            return self.evaluator.evaluate(self.y_test, y_pred)
+            try:
+                y_pred = self.model_instance.predict(self.X_test)
+                if y_pred is None:
+                    raise ValueError("Model prediction returned None")
+                return self.evaluator.evaluate(self.y_test, y_pred)
+            except Exception as e:
+                print(f"❌ Evaluation error: {e}")
+                return {
+                    'accuracy': 0.0,
+                    'precision': 0.0,
+                    'recall': 0.0,
+                    'f1': 0.0
+                }
+        else:
+            print("⚠️  Cannot evaluate: Model or test data not available")
+            return {
+                'accuracy': 0.0,
+                'precision': 0.0,
+                'recall': 0.0,
+                'f1': 0.0
+            }
 
     def test(self):
         """Tests ML model (could be same as evaluate or extended)."""

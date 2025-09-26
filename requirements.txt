@@ -4,5 +4,6 @@ scikit-learn
 imblearn
 joblib
 langchain
+langchain-community
 python-dotenv
 openai

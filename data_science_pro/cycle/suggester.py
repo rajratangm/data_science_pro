@@ -1,4 +1,4 @@
-from data_science_pro.api import llm_connector
+from data_science_pro.api.llm_connector import LLMConnector
 from langchain.memory import ConversationBufferMemory
 from langchain.agents import initialize_agent, Tool
 from langchain_community.llms import OpenAI
@@ -13,10 +13,11 @@ class ChainOfThoughtSuggester:
     """
     
     def __init__(self, api_key=None, memory=None):
-        if not api_key:
-            raise ValueError("API key must be provided to ChainOfThoughtSuggester.")
-        
-        self.llm = llm_connector.LLMConnector(api_key)
+        """Initialize the suggester with optional API key."""
+        if api_key:
+            self.llm = LLMConnector(api_key)
+        else:
+            self.llm = None
         self.memory = memory or ConversationBufferMemory()
         self.conversation_history = []
         self.workflow_stage = "initial"
@@ -37,6 +38,10 @@ class ChainOfThoughtSuggester:
     def _setup_advanced_agent(self):
         """Setup sophisticated agent with specialized tools for each aspect of data science workflow."""
         
+        # Only setup agent if LLM is available
+        if not self.llm:
+            return
+            
         tools = [
             Tool(
                 name="DataQualityAnalyzer",
@@ -177,6 +182,24 @@ class ChainOfThoughtSuggester:
     
     def _data_quality_reasoning(self, analyzer_result: Dict, user_query: str, metrics: Dict) -> Dict[str, Any]:
         """Specialized reasoning for data quality issues."""
+        
+        # If no LLM available, return default data quality suggestions
+        if not self.llm:
+            return {
+                "reasoning": "Based on standard data science practices, focus on handling missing values, outliers, and data type consistency for better model performance.",
+                "primary_action": "comprehensive_data_cleaning",
+                "alternatives": ["targeted_missing_value_treatment", "outlier_detection_and_removal"],
+                "confidence": 0.8,
+                "implementation_steps": [
+                    "Identify and quantify all data quality issues",
+                    "Apply targeted missing value imputation",
+                    "Handle outliers using domain-appropriate methods",
+                    "Validate improvements with before/after comparison"
+                ],
+                "expected_results": "Significant improvement in model stability and performance metrics",
+                "engagement_message": "🎯 I've spotted some key data quality issues that are likely holding back your model! Let's fix these systematically.",
+                "next_actions": ["drop_na", "fill_na", "detect_outliers", "validate_cleaning"]
+            }
         
         reasoning_prompt = f"""
         DATA QUALITY ANALYSIS:
@@ -410,8 +433,210 @@ class ChainOfThoughtSuggester:
             return "hyperparameter_tuning"
         else:
             return "feature_engineering"
+    
+    def _analyze_data_quality(self, data_analysis: str) -> str:
+        """Analyze data quality and provide specific recommendations."""
+        prompt = f"""
+        Analyze this data quality assessment and provide specific recommendations:
+        {data_analysis}
+        
+        Focus on:
+        1. Most critical data quality issues
+        2. Specific impact on model performance
+        3. Prioritized action plan
+        4. Expected improvement metrics
+        """
+        return self.llm.generate_response(prompt)
+    
+    def _suggest_feature_engineering(self, feature_analysis: str) -> str:
+        """Suggest advanced feature engineering techniques."""
+        prompt = f"""
+        Based on this feature analysis, suggest specific feature engineering opportunities:
+        {feature_analysis}
+        
+        Provide:
+        1. Creative feature transformation ideas
+        2. Interaction term suggestions
+        3. Domain-specific feature recommendations
+        4. Implementation details
+        """
+        return self.llm.generate_response(prompt)
+    
+    def _strategic_model_selection(self, model_context: str) -> str:
+        """Provide strategic model selection advice."""
+        prompt = f"""
+        Given this modeling context, recommend optimal model selection strategy:
+        {model_context}
+        
+        Include:
+        1. Best model families for this data type
+        2. Specific algorithm recommendations
+        3. Starting hyperparameters
+        4. Validation approach
+        """
+        return self.llm.generate_response(prompt)
+    
+    def _optimize_hyperparameters(self, optimization_context: str) -> str:
+        """Provide hyperparameter optimization guidance."""
+        prompt = f"""
+        Analyze this optimization context and suggest hyperparameter tuning strategy:
+        {optimization_context}
+        
+        Provide:
+        1. Critical hyperparameters to tune
+        2. Search space recommendations
+        3. Efficient search strategies
+        4. Stopping criteria
+        """
+        return self.llm.generate_response(prompt)
+    
+    def _interpret_evaluation_results(self, evaluation_results: str) -> str:
+        """Interpret model evaluation results and suggest improvements."""
+        prompt = f"""
+        Analyze these evaluation results and provide actionable insights:
+        {evaluation_results}
+        
+        Focus on:
+        1. Performance interpretation
+        2. Error pattern analysis
+        3. Improvement opportunities
+        4. Next steps prioritization
+        """
+        return self.llm.generate_response(prompt)
 
-# Keep the original Suggester class for backward compatibility, but use the new one internally
-class Suggester(ChainOfThoughtSuggester):
-    """Enhanced Suggester with chain-of-thought reasoning - backward compatible."""
-    pass
+    def suggest_models(self, test_results: Dict, user_query: str, metrics: Dict = None) -> List[Dict[str, Any]]:
+        """
+        Suggest alternative models based on test results and performance metrics.
+        
+        Args:
+            test_results: Current model test results and analysis
+            user_query: User's improvement goals
+            metrics: Current performance metrics
+            
+        Returns:
+            List of model suggestions with reasoning
+        """
+        
+        # If no LLM available, return default model suggestions based on metrics
+        if not self.llm:
+            current_accuracy = metrics.get('accuracy', 0) if metrics else 0
+            
+            if current_accuracy < 0.7:
+                return [
+                    {
+                        'model': 'RandomForestClassifier',
+                        'reasoning': 'Random Forest handles non-linear relationships well and is robust to overfitting. Good for improving accuracy.',
+                        'expected_performance': 'Should improve accuracy by 10-20%',
+                        'suggested_params': {'n_estimators': 100, 'max_depth': 10, 'min_samples_split': 5}
+                    },
+                    {
+                        'model': 'GradientBoostingClassifier',
+                        'reasoning': 'Gradient Boosting can capture complex patterns and often outperforms single decision trees.',
+                        'expected_performance': 'Potential 15-25% accuracy improvement',
+                        'suggested_params': {'n_estimators': 100, 'learning_rate': 0.1, 'max_depth': 3}
+                    }
+                ]
+            else:
+                return [
+                    {
+                        'model': 'LogisticRegression',
+                        'reasoning': 'Logistic Regression is interpretable and can serve as a good baseline or ensemble component.',
+                        'expected_performance': 'May provide similar performance with better interpretability',
+                        'suggested_params': {'C': 1.0, 'solver': 'liblinear', 'max_iter': 1000}
+                    },
+                    {
+                        'model': 'SVC',
+                        'reasoning': 'Support Vector Classifier can work well with normalized features and might capture different patterns.',
+                        'expected_performance': 'Could provide 5-10% improvement on well-separated data',
+                        'suggested_params': {'C': 1.0, 'kernel': 'rbf', 'gamma': 'scale'}
+                    }
+                ]
+        
+        # LLM-powered suggestions
+        prompt = f"""
+        Based on these test results and metrics, suggest 3-5 alternative models:
+        
+        Current Test Results: {json.dumps(test_results, indent=2)}
+        Current Metrics: {json.dumps(metrics, indent=2)}
+        User Goals: {user_query}
+        
+        Consider:
+        1. Current model weaknesses revealed by testing
+        2. Data characteristics that might benefit from different algorithms
+        3. Performance bottlenecks that alternative models could address
+        4. Ensemble opportunities for better robustness
+        
+        Return JSON format:
+        [
+            {{
+                "model": "ModelName",
+                "reasoning": "Why this model would work better",
+                "expected_performance": "Expected improvement description",
+                "suggested_params": {{"param": "value"}}
+            }}
+        ]
+        """
+        
+        try:
+            response = self.llm.generate_response(prompt)
+            suggestions = json.loads(response)
+            return suggestions if isinstance(suggestions, list) else []
+        except Exception:
+            # Fallback to rule-based suggestions
+            return self.suggest_models(test_results, user_query, metrics)  # Recursive call without LLM
+    
+    def suggest_hyperparams(self, test_results: Dict, model_name: str, user_query: str) -> str:
+        """
+        Suggest optimal hyperparameters based on test results and model performance.
+        
+        Args:
+            test_results: Current model test results and analysis
+            model_name: Name of the model to optimize
+            user_query: User's improvement goals
+            
+        Returns:
+            String representation of suggested hyperparameters dict
+        """
+        
+        # If no LLM available, return default hyperparameters
+        if not self.llm:
+            default_params = {
+                'RandomForestClassifier': {'n_estimators': 100, 'max_depth': 10, 'min_samples_split': 5},
+                'LogisticRegression': {'C': 1.0, 'solver': 'liblinear', 'max_iter': 1000},
+                'GradientBoostingClassifier': {'n_estimators': 100, 'learning_rate': 0.1, 'max_depth': 3},
+                'SVC': {'C': 1.0, 'kernel': 'rbf', 'gamma': 'scale'}
+            }
+            
+            params = default_params.get(model_name, {})
+            return str(params)
+        
+        # LLM-powered hyperparameter suggestions
+        prompt = f"""
+        Based on these test results, suggest optimal hyperparameters for {model_name}:
+        
+        Test Results: {json.dumps(test_results, indent=2)}
+        User Goals: {user_query}
+        
+        Consider:
+        1. Current performance bottlenecks revealed by testing
+        2. Model-specific hyperparameter trade-offs
+        3. Data characteristics affecting optimal parameter choices
+        4. Computational constraints and training time considerations
+        
+        Return a Python dictionary string with suggested hyperparameters.
+        Focus on the most impactful 3-5 parameters for this specific case.
+        
+        Example format: {{"n_estimators": 200, "max_depth": 15, "min_samples_split": 10}}
+        """
+        
+        try:
+            response = self.llm.generate_response(prompt)
+            # Validate that response is a proper dict string
+            eval(response)  # Test if it's valid Python
+            return response
+        except Exception:
+            # Fallback to default parameters
+            return self.suggest_hyperparams(test_results, model_name, user_query)  # Recursive call without LLM
+
+# Alias for backward compatibility
+Suggester = ChainOfThoughtSuggester
