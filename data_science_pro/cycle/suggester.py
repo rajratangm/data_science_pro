@@ -92,7 +92,7 @@ class ChainOfThoughtSuggester:
         """
         
         # Generate comprehensive CSV analysis if data is available
-        csv_analysis = self._generate_comprehensive_csv_analysis(analyzer_result, csv_data, metrics) if csv_data else None
+        csv_analysis = self._generate_comprehensive_csv_analysis(analyzer_result, csv_data, metrics) if csv_data is not None and not csv_data.empty else None
         
         # Update conversation history and context with comprehensive information
         self._update_context(analyzer_result, user_query, metrics, csv_analysis)
