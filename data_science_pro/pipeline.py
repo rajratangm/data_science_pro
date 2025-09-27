@@ -89,6 +89,13 @@ class DataSciencePro:
         # Get comprehensive analysis
         analyzer_result = self.report()
         
+        # Handle case where report() returns a string (fallback mode)
+        if isinstance(analyzer_result, str):
+            print("⚠️  Running in basic mode due to AI initialization issues.")
+            print("📊 Using raw data analysis for suggestions...")
+            # Convert back to basic analysis for suggester
+            analyzer_result = self.analyzer.analyze(self.data)
+        
         if user_query is None and interactive:
             print("\n🎯 What would you like to achieve with your data?")
             print("💡 Examples: 'I want to improve accuracy', 'Reduce overfitting', 'Handle missing values better'")

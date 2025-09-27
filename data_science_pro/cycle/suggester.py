@@ -183,6 +183,25 @@ class ChainOfThoughtSuggester:
     def _data_quality_reasoning(self, analyzer_result: Dict, user_query: str, metrics: Dict) -> Dict[str, Any]:
         """Specialized reasoning for data quality issues."""
         
+        # Handle string fallback case
+        if isinstance(analyzer_result, str):
+            print("⚠️  Warning: AI report generation failed, using basic data quality recommendations")
+            return {
+                "reasoning": "Data quality improvements are essential for better model performance. Focus on handling missing values, detecting outliers, and ensuring consistent data types.",
+                "primary_action": "comprehensive_data_cleaning",
+                "alternatives": ["missing_value_imputation", "outlier_detection", "data_type_conversion"],
+                "confidence": 0.9,
+                "implementation_steps": [
+                    "Identify and quantify all data quality issues",
+                    "Apply targeted missing value imputation",
+                    "Handle outliers using domain-appropriate methods",
+                    "Validate improvements with before/after comparison"
+                ],
+                "expected_results": "Significant improvement in model stability and performance metrics",
+                "engagement_message": "🎯 I've spotted some key data quality issues that are likely holding back your model! Let's fix these systematically.",
+                "next_actions": ["drop_na", "fill_na", "detect_outliers", "validate_cleaning"]
+            }
+        
         # If no LLM available, return default data quality suggestions
         if not self.llm:
             return {
@@ -243,6 +262,25 @@ class ChainOfThoughtSuggester:
     def _feature_engineering_reasoning(self, analyzer_result: Dict, user_query: str, metrics: Dict) -> Dict[str, Any]:
         """Sophisticated reasoning for feature engineering opportunities."""
         
+        # Handle string fallback case
+        if isinstance(analyzer_result, str):
+            print("⚠️  Warning: AI report generation failed, using basic feature engineering recommendations")
+            return {
+                "reasoning": "Feature engineering can unlock hidden patterns in your data. Consider creating interaction terms, polynomial features, and domain-specific transformations.",
+                "primary_action": "strategic_feature_engineering",
+                "alternatives": ["interaction_features", "polynomial_features", "domain_specific_features"],
+                "confidence": 0.85,
+                "implementation_steps": [
+                    "Analyze current feature relationships and correlations",
+                    "Create interaction terms for highly correlated features",
+                    "Apply domain-specific feature transformations",
+                    "Test feature selection techniques to optimize dimensionality"
+                ],
+                "expected_results": "Enhanced model predictive power and reduced overfitting",
+                "engagement_message": "🔍 I've identified some exciting feature engineering opportunities that could unlock hidden patterns in your data!",
+                "next_actions": ["feature_gen", "interaction_terms", "polynomial_features", "feature_selection"]
+            }
+        
         reasoning_prompt = f"""
         FEATURE ENGINEERING STRATEGY:
         
@@ -285,6 +323,25 @@ class ChainOfThoughtSuggester:
     
     def _model_selection_reasoning(self, analyzer_result: Dict, user_query: str, metrics: Dict) -> Dict[str, Any]:
         """Intelligent model selection with detailed justification."""
+        
+        # Handle string fallback case
+        if isinstance(analyzer_result, str):
+            print("⚠️  Warning: AI report generation failed, using basic model selection recommendations")
+            return {
+                "reasoning": "Based on standard data science practices, Random Forest and Gradient Boosting are good starting points for most classification tasks.",
+                "primary_action": "optimized_model_selection",
+                "alternatives": ["ensemble_approach", "deep_learning_models", "traditional_ml"],
+                "confidence": 0.88,
+                "implementation_steps": [
+                    "Evaluate baseline performance with simple models",
+                    "Test recommended primary model with suggested hyperparameters",
+                    "Compare with 2-3 alternative models for validation",
+                    "Select final model based on cross-validation performance"
+                ],
+                "expected_results": "Optimal balance of accuracy, interpretability, and computational efficiency",
+                "engagement_message": "🎯 I've analyzed your data profile and have some strategic model recommendations that should excel with your specific dataset!",
+                "next_actions": ["randomforest", "logisticregression", "gradient_boosting", "neural_network"]
+            }
         
         reasoning_prompt = f"""
         MODEL SELECTION INTELLIGENCE:
@@ -330,6 +387,25 @@ class ChainOfThoughtSuggester:
     def _hyperparameter_tuning_reasoning(self, analyzer_result: Dict, user_query: str, metrics: Dict) -> Dict[str, Any]:
         """Sophisticated hyperparameter optimization reasoning."""
         
+        # Handle string fallback case
+        if isinstance(analyzer_result, str):
+            print("⚠️  Warning: AI report generation failed, using basic hyperparameter tuning recommendations")
+            return {
+                "reasoning": "Hyperparameter tuning can significantly improve model performance. Start with grid search on key parameters like n_estimators, max_depth, and learning rate.",
+                "primary_action": "scientific_hyperparameter_tuning",
+                "alternatives": ["bayesian_optimization", "grid_search", "random_search"],
+                "confidence": 0.82,
+                "implementation_steps": [
+                    "Identify underperforming hyperparameters from current metrics",
+                    "Design targeted search space based on data characteristics",
+                    "Apply efficient search strategy (Bayesian/Grid/Random)",
+                    "Validate final hyperparameters with cross-validation"
+                ],
+                "expected_results": "Significant improvement in model generalization and performance metrics",
+                "engagement_message": "⚙️ Time to fine-tune your model's engine! I've identified some hyperparameter optimizations that could give you a real performance boost.",
+                "next_actions": ["hyperparameter_grid_search", "bayesian_optimization", "cross_validation"]
+            }
+        
         reasoning_prompt = f"""
         HYPERPARAMETER OPTIMIZATION STRATEGY:
         
@@ -366,6 +442,25 @@ class ChainOfThoughtSuggester:
     
     def _evaluation_reasoning(self, analyzer_result: Dict, user_query: str, metrics: Dict) -> Dict[str, Any]:
         """Deep analysis of model evaluation results."""
+        
+        # Handle string fallback case
+        if isinstance(analyzer_result, str):
+            print("⚠️  Warning: AI report generation failed, using basic evaluation recommendations")
+            return {
+                "reasoning": "Model evaluation is crucial for understanding performance. Focus on accuracy, precision, recall, and cross-validation scores to identify improvement opportunities.",
+                "primary_action": "comprehensive_model_evaluation",
+                "alternatives": ["error_analysis", "cross_validation", "ensemble_methods"],
+                "confidence": 0.9,
+                "implementation_steps": [
+                    "Deep dive into misclassification patterns",
+                    "Analyze feature importance and model interpretability",
+                    "Test model stability with cross-validation",
+                    "Identify specific improvement opportunities"
+                ],
+                "expected_results": "Clear understanding of model strengths, weaknesses, and improvement opportunities",
+                "engagement_message": "📊 Your model evaluation reveals some fascinating insights! Let me break down what these results mean and how we can push performance even higher.",
+                "next_actions": ["detailed_error_analysis", "cross_validation", "feature_importance", "model_ensemble"]
+            }
         
         reasoning_prompt = f"""
         MODEL EVALUATION DEEP DIVE:
@@ -405,11 +500,16 @@ class ChainOfThoughtSuggester:
         """Update internal context tracking for better personalization."""
         self.current_metrics = metrics or {}
         
-        # Extract key information for context
+        # Extract key information for context (only if analyzer_result is a dict)
         if isinstance(analyzer_result, dict):
             self.dataset_size = analyzer_result.get('dataset_size', 'unknown')
             self.target_type = analyzer_result.get('target_type', 'unknown')
             self.data_quality_score = analyzer_result.get('data_quality_score', 'unknown')
+        else:
+            # Set defaults when analyzer_result is a string
+            self.dataset_size = 'unknown'
+            self.target_type = 'unknown'
+            self.data_quality_score = 'unknown'
         
         # Update workflow stage based on progress
         if not self.previous_actions:
