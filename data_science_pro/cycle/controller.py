@@ -628,11 +628,7 @@ class InteractiveController(IntelligentController):
 # Backward compatibility
 class Controller(InteractiveController):
     """Enhanced controller with intelligent workflow management."""
-    pass
-
-# Alias for backward compatibility
-CycleController = Controller
-
+    
     def titanic_comprehensive_workflow(self, data=None):
         """
         Comprehensive Titanic dataset workflow with multi-stage analysis.
@@ -794,7 +790,13 @@ CycleController = Controller
         print("="*80)
         print(f"🎯 Final Model Performance: {cv_metrics.get('mean_accuracy', 0):.1%} ± {cv_metrics.get('std_accuracy', 0):.1%}")
         print(f"📊 Total Analysis Stages: {len(analysis_history)}")
-        print(f"🔍 Complex Queries Processed: {len([h for h in analysis_history if h.get('suggestions', {}).get('query_complexity', {}).get('level') == 'high'])}")
+        # Count complex queries safely
+        complex_count = 0
+        for h in analysis_history:
+            suggestions = h.get('suggestions', {})
+            if isinstance(suggestions, dict) and suggestions.get('query_complexity', {}).get('level') == 'high':
+                complex_count += 1
+        print(f"🔍 Complex Queries Processed: {complex_count}")
         print(f"💡 Business Insights Generated: Maritime safety recommendations")
         print(f"🚀 Deployment Ready: Complete strategy provided")
         
