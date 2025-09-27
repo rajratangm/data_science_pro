@@ -50,7 +50,12 @@ class DataOperations:
     def encode(self, df, columns=None):
         """One-hot encode specified categorical columns."""
         cols = columns if columns else df.select_dtypes(include='object').columns
-        encoder = OneHotEncoder(sparse=False, handle_unknown='ignore')
+        # Handle different scikit-learn versions
+        try:
+            encoder = OneHotEncoder(sparse_output=False, handle_unknown='ignore')
+        except TypeError:
+            # Fallback for older scikit-learn versions
+            encoder = OneHotEncoder(sparse=False, handle_unknown='ignore')
         encoded = encoder.fit_transform(df[cols])
         encoded_df = pd.DataFrame(encoded, columns=encoder.get_feature_names_out(cols), index=df.index)
         df = df.drop(columns=cols)
