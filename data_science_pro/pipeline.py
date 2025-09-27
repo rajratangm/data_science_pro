@@ -170,22 +170,22 @@ class DataSciencePro:
         
         # Display comprehensive CSV analysis first
         csv_analysis = response.get('csv_analysis', {})
-        if csv_analysis:
+        if csv_analysis and isinstance(csv_analysis, dict):
             print(f"\n📊 **COMPREHENSIVE DATA ANALYSIS:**")
             print(f"📈 **Data Quality Score:** {csv_analysis.get('data_quality_score', 'N/A')}/10")
             print(f"🎯 **Modeling Readiness:** {csv_analysis.get('modeling_readiness', 'N/A')}/10")
             
-            if 'critical_issues' in csv_analysis and csv_analysis['critical_issues']:
+            if 'critical_issues' in csv_analysis and isinstance(csv_analysis['critical_issues'], list) and len(csv_analysis['critical_issues']) > 0:
                 print(f"\n⚠️  **CRITICAL ISSUES IDENTIFIED:**")
                 for issue in csv_analysis['critical_issues']:
                     print(f"   • {issue}")
             
-            if 'key_insights' in csv_analysis and csv_analysis['key_insights']:
+            if 'key_insights' in csv_analysis and isinstance(csv_analysis['key_insights'], list) and len(csv_analysis['key_insights']) > 0:
                 print(f"\n🔍 **KEY DATA INSIGHTS:**")
                 for insight in csv_analysis['key_insights']:
                     print(f"   • {insight}")
             
-            if 'preprocessing_recommendations' in csv_analysis and csv_analysis['preprocessing_recommendations']:
+            if 'preprocessing_recommendations' in csv_analysis and isinstance(csv_analysis['preprocessing_recommendations'], list) and len(csv_analysis['preprocessing_recommendations']) > 0:
                 print(f"\n🛠️  **RECOMMENDED PREPROCESSING:**")
                 for rec in csv_analysis['preprocessing_recommendations']:
                     print(f"   • {rec}")

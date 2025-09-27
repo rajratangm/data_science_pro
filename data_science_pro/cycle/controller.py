@@ -415,35 +415,51 @@ class InteractiveController(IntelligentController):
             suggestions = pipeline.suggestions(user_query=user_query)
             
             print(f"\n🎯 **Smart Suggestions for your goal:**")
-            if suggestions:
-                for idx, suggestion in enumerate(suggestions):
-                    print(f"\n   [{idx}] **{suggestion.get('title', 'Action')}**")
-                    print(f"       📝 {suggestion.get('description', 'No description')}")
-                    print(f"       ⚡ Action: {suggestion.get('action_id', 'unknown')}")
-                    if 'expected_impact' in suggestion:
-                        print(f"       📈 Expected Impact: {suggestion['expected_impact']}")
+            if suggestions and isinstance(suggestions, dict):
+                # Handle the new dictionary format from suggest_next_action
+                print(f"\n   🎯 **Primary Recommendation:** {suggestions.get('primary_recommendation', 'No primary recommendation')}")
+                
+                alternatives = suggestions.get('alternative_options', [])
+                if alternatives:
+                    print(f"\n   🔄 **Alternative Approaches:**")
+                    for idx, alt in enumerate(alternatives):
+                        print(f"      [{idx}] {alt}")
+                
+                implementation_steps = suggestions.get('implementation_steps', [])
+                if implementation_steps:
+                    print(f"\n   📋 **Implementation Steps:**")
+                    for idx, step in enumerate(implementation_steps):
+                        print(f"      {idx+1}. {step}")
+                
+                # Use next_actions for interactive selection
+                next_actions = suggestions.get('next_possible_actions', [])
+                if next_actions:
+                    print(f"\n   ⚡ **Available Actions:**")
+                    for idx, action in enumerate(next_actions):
+                        print(f"      [{idx}] {action}")
+                    
+                    # Interactive selection from next_actions
+                    action_idx = input("\n🤔 **Which action would you like to apply?** (Enter number, or press Enter to skip): ")
+                    if action_idx.isdigit() and int(action_idx) < len(next_actions):
+                        action_id = next_actions[int(action_idx)]
+                        print(f"\n⚡ **Applying action:** {action_id}")
+                        try:
+                            pipeline.apply_action(action_id)
+                            self.update_state('preprocessing', f'cycle_{cycle+1}', action_id)
+                            print(f"✅ **Action completed successfully!**")
+                            
+                            # Show immediate impact
+                            new_report = pipeline.report()
+                            if 'data_shape' in new_report:
+                                print(f"📊 **Data shape after action:** {new_report['data_shape']}")
+                            
+                        except Exception as e:
+                            print(f"❌ **Action failed:** {str(e)}")
+                            print("💡 **Tip:** This might be expected - some actions can't be applied to all data types.")
+                else:
+                    print("   ⚠️  No specific actions available in this suggestion.")
             else:
                 print("   ⚠️  No specific suggestions available. Try general goals like 'improve data quality'.")
-            
-            # Interactive selection
-            action_idx = input("\n🤔 **Which action would you like to apply?** (Enter number, or press Enter to skip): ")
-            if action_idx.isdigit() and int(action_idx) < len(suggestions):
-                action_id = suggestions[int(action_idx)].get('action_id', None)
-                if action_id:
-                    print(f"\n⚡ **Applying action:** {action_id}")
-                    try:
-                        pipeline.apply_action(action_id)
-                        self.update_state('preprocessing', f'cycle_{cycle+1}', action_id)
-                        print(f"✅ **Action completed successfully!**")
-                        
-                        # Show immediate impact
-                        new_report = pipeline.report()
-                        if 'data_shape' in new_report:
-                            print(f"📊 **Data shape after action:** {new_report['data_shape']}")
-                        
-                    except Exception as e:
-                        print(f"❌ **Action failed:** {str(e)}")
-                        print("💡 **Tip:** This might be expected - some actions can't be applied to all data types.")
             
             # Check if goal achieved
             if metric_goal and self.check_metric(report, metric_goal):
@@ -496,12 +512,30 @@ class InteractiveController(IntelligentController):
             suggestions = pipeline.suggester.suggest_models(report, user_query, metrics=report.get('metrics', {}))
             
             print(f"\n🎯 **Smart Model Suggestions:**")
-            if suggestions:
+            if suggestions and isinstance(suggestions, dict):
+                # Handle dictionary format
+                print(f"\n   🎯 **Primary Recommendation:** {suggestions.get('primary_recommendation', 'No primary recommendation')}")
+                
+                alternatives = suggestions.get('alternative_options', [])
+                if alternatives:
+                    print(f"\n   🔄 **Alternative Models:**")
+                    for idx, alt in enumerate(alternatives):
+                        print(f"      [{idx}] {alt}")
+                
+                implementation_steps = suggestions.get('implementation_steps', [])
+                if implementation_steps:
+                    print(f"\n   📋 **Implementation Steps:**")
+                    for idx, step in enumerate(implementation_steps):
+                        print(f"      {idx+1}. {step}")
+            elif suggestions and isinstance(suggestions, list):
+                # Handle legacy list format if still used
                 for idx, suggestion in enumerate(suggestions):
                     print(f"\n   [{idx}] **{suggestion.get('model', 'Model')}**")
                     print(f"       📝 {suggestion.get('reasoning', 'No reasoning provided')}")
                     if 'expected_performance' in suggestion:
                         print(f"       📈 Expected Performance: {suggestion['expected_performance']}")
+            else:
+                print("   ⚠️  No model suggestions available.")
             
             # Model selection
             model_name = input("\n🤔 **Which model would you like to try?** (Enter model name, or press Enter to keep current): ")
@@ -574,24 +608,44 @@ class InteractiveController(IntelligentController):
             suggestions = pipeline.suggestions(user_query=user_query)
             
             print(f"\n🔍 **Smart Diagnostic Suggestions:**")
-            if suggestions:
-                for idx, suggestion in enumerate(suggestions):
-                    print(f"\n   [{idx}] **{suggestion.get('title', 'Analysis')}**")
-                    print(f"       📝 {suggestion.get('description', 'No description')}")
-                    print(f"       ⚡ Action: {suggestion.get('action_id', 'unknown')}")
-            
-            # Apply diagnostic actions
-            action_idx = input("\n🤔 **Which diagnostic would you like to run?** (Enter number, or press Enter to skip): ")
-            if action_idx.isdigit() and int(action_idx) < len(suggestions):
-                action_id = suggestions[int(action_idx)].get('action_id', None)
-                if action_id:
-                    print(f"\n🔍 **Running diagnostic:** {action_id}")
-                    try:
-                        pipeline.apply_action(action_id)
-                        self.update_state('testing', f'cycle_{cycle+1}', action_id)
-                        print(f"✅ **Diagnostic completed!**")
-                    except Exception as e:
-                        print(f"❌ **Diagnostic failed:** {str(e)}")
+            if suggestions and isinstance(suggestions, dict):
+                # Handle dictionary format
+                print(f"\n   🎯 **Primary Recommendation:** {suggestions.get('primary_recommendation', 'No primary recommendation')}")
+                
+                alternatives = suggestions.get('alternative_options', [])
+                if alternatives:
+                    print(f"\n   🔄 **Alternative Diagnostics:**")
+                    for idx, alt in enumerate(alternatives):
+                        print(f"      [{idx}] {alt}")
+                
+                implementation_steps = suggestions.get('implementation_steps', [])
+                if implementation_steps:
+                    print(f"\n   📋 **Implementation Steps:**")
+                    for idx, step in enumerate(implementation_steps):
+                        print(f"      {idx+1}. {step}")
+                
+                # Use next_actions for interactive selection
+                next_actions = suggestions.get('next_possible_actions', [])
+                if next_actions:
+                    print(f"\n   ⚡ **Available Diagnostics:**")
+                    for idx, action in enumerate(next_actions):
+                        print(f"      [{idx}] {action}")
+                    
+                    # Interactive selection from next_actions
+                    action_idx = input("\n🤔 **Which diagnostic would you like to run?** (Enter number, or press Enter to skip): ")
+                    if action_idx.isdigit() and int(action_idx) < len(next_actions):
+                        action_id = next_actions[int(action_idx)]
+                        print(f"\n🔍 **Running diagnostic:** {action_id}")
+                        try:
+                            pipeline.apply_action(action_id)
+                            self.update_state('testing', f'cycle_{cycle+1}', action_id)
+                            print(f"✅ **Diagnostic completed!**")
+                        except Exception as e:
+                            print(f"❌ **Diagnostic failed:** {str(e)}")
+                else:
+                    print("   ⚠️  No specific diagnostics available in this suggestion.")
+            else:
+                print("   ⚠️  No diagnostic suggestions available.")
             
             # Check if goal achieved
             if metric_goal and self.check_metric(report, metric_goal):
@@ -903,3 +957,6 @@ class Controller(InteractiveController):
             'Cabin': cabin,
             'Embarked': embarked
         })
+
+# Alias for backward compatibility
+CycleController = Controller
