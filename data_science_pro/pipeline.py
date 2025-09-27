@@ -163,36 +163,41 @@ class DataSciencePro:
     def _display_engaging_suggestions(self, response: dict):
         """Display AI suggestions in an engaging, user-friendly format."""
         
-        print(f"\n🧠 **STAGE:** {response['stage'].replace('_', ' ').title()}")
-        print(f"📊 **CONFIDENCE:** {response['confidence_score']:.1%}")
+        print(f"\n🧠 **STAGE:** {response.get('stage', 'unknown').replace('_', ' ').title()}")
+        print(f"📊 **CONFIDENCE:** {response.get('confidence_score', 0):.1%}")
         print("\n" + "="*60)
         
         # Main reasoning with emoji highlights
-        reasoning = response['reasoning']
+        reasoning = response.get('reasoning', 'Analysis available - see details above')
         print(f"\n🤔 **MY ANALYSIS:**")
         print(f"{reasoning}")
         
-        print(f"\n🎯 **PRIMARY RECOMMENDATION:**")
-        print(f"✅ {response['primary_recommendation']}")
+        if 'primary_recommendation' in response:
+            print(f"\n🎯 **PRIMARY RECOMMENDATION:**")
+            print(f"✅ {response['primary_recommendation']}")
         
-        if response['alternative_options']:
+        if response.get('alternative_options'):
             print(f"\n🔄 **ALTERNATIVE APPROACHES:**")
             for i, alt in enumerate(response['alternative_options'], 1):
                 print(f"   {i}. 💭 {alt}")
         
-        print(f"\n📋 **IMPLEMENTATION STEPS:**")
-        for i, step in enumerate(response['implementation_steps'], 1):
-            print(f"   {i}. ▶️ {step}")
+        if 'implementation_steps' in response:
+            print(f"\n📋 **IMPLEMENTATION STEPS:**")
+            for i, step in enumerate(response['implementation_steps'], 1):
+                print(f"   {i}. ▶️ {step}")
         
-        print(f"\n🚀 **EXPECTED OUTCOMES:**")
-        print(f"🎉 {response['expected_outcomes']}")
+        if 'expected_outcomes' in response:
+            print(f"\n🚀 **EXPECTED OUTCOMES:**")
+            print(f"🎉 {response['expected_outcomes']}")
         
-        print(f"\n💬 **ENGAGEMENT MESSAGE:**")
-        print(f"{response['engagement_message']}")
+        if 'engagement_message' in response:
+            print(f"\n💬 **ENGAGEMENT MESSAGE:**")
+            print(f"{response['engagement_message']}")
         
-        print(f"\n⏭️  **NEXT POSSIBLE ACTIONS:**")
-        for i, action in enumerate(response['next_actions'], 1):
-            print(f"   {i}. 🎯 {action}")
+        if 'next_actions' in response:
+            print(f"\n⏭️  **NEXT POSSIBLE ACTIONS:**")
+            for i, action in enumerate(response['next_actions'], 1):
+                print(f"   {i}. 🎯 {action}")
         
         print("\n" + "="*60)
         print("🚀 Ready to take action? Choose your next step!")
@@ -246,18 +251,24 @@ class DataSciencePro:
             
             # Let user choose next action
             print(f"\n🎮 **Choose your next action:**")
-            available_actions = response['next_actions'] if 'response' in locals() else suggestions['next_actions']
+            available_actions = suggestions.get('next_actions', []) if isinstance(suggestions, dict) and 'next_actions' in suggestions else []
             
-            for i, action in enumerate(available_actions, 1):
-                print(f"   {i}. ⚡ {action}")
-            print(f"   {len(available_actions)+1}. 🔄 Get different suggestions")
-            print(f"   {len(available_actions)+2}. 🛑 Finish workflow")
-            
-            choice = input(f"\n📝 Your choice (1-{len(available_actions)+2}): ").strip()
+            if available_actions:
+                for i, action in enumerate(available_actions, 1):
+                    print(f"   {i}. ⚡ {action}")
+                print(f"   {len(available_actions)+1}. 🔄 Get different suggestions")
+                print(f"   {len(available_actions)+2}. 🛑 Finish workflow")
+                
+                choice = input(f"\n📝 Your choice (1-{len(available_actions)+2}): ").strip()
+            else:
+                print("   1. 🔄 Get different suggestions")
+                print("   2. 🛑 Finish workflow")
+                choice = input(f"\n📝 Your choice (1-2): ").strip()
+                available_actions = []
             
             if choice.isdigit():
                 choice_num = int(choice)
-                if 1 <= choice_num <= len(available_actions):
+                if available_actions and 1 <= choice_num <= len(available_actions):
                     selected_action = available_actions[choice_num-1]
                     print(f"\n🚀 **Executing: {selected_action}**")
                     
@@ -288,10 +299,10 @@ class DataSciencePro:
                         for metric, value in results.items():
                             print(f"   • {metric.title()}: {value:.4f}")
                     
-                elif choice_num == len(available_actions)+1:
+                elif choice_num == (len(available_actions) + 1 if available_actions else 1):
                     print("🔄 Getting new suggestions...")
                     continue
-                elif choice_num == len(available_actions)+2:
+                elif choice_num == (len(available_actions) + 2 if available_actions else 2):
                     print("\n🎉 **Workflow completed!** Great job! 🎉")
                     break
             
