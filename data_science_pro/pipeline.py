@@ -110,7 +110,7 @@ class DataSciencePro:
             analyzer_result, 
             user_query, 
             metrics,
-            csv_data=self.data if hasattr(self, 'data') and self.data is not None else None
+            csv_data=self.data if hasattr(self, 'data') and self.data is not None and not self.data.empty else None
         )
         
         if interactive:
