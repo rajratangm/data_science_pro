@@ -1031,7 +1031,7 @@ class ChainOfThoughtSuggester:
         4. How current metrics compare to historical performance
         5. What the user is specifically asking for
         6. What would be the most logical next step based on all evidence
-        """"
+        """
         
         # Use the appropriate reasoning chain based on stage
         if stage in self.reasoning_chains:
