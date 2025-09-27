@@ -104,9 +104,14 @@ class DataSciencePro:
             if not user_query:
                 user_query = "improve model performance and data quality"
                 print(f"🔄 Using default goal: {user_query}")
-        
-        # Get sophisticated chain-of-thought suggestions
-        suggestion_response = self.suggester.suggest_next_action(analyzer_result, user_query, metrics)
+
+        # Get sophisticated chain-of-thought suggestions with comprehensive CSV analysis
+        suggestion_response = self.suggester.suggest_next_action(
+            analyzer_result, 
+            user_query, 
+            metrics,
+            csv_data=self.data if hasattr(self, 'data') and self.data is not None else None
+        )
         
         if interactive:
             self._display_engaging_suggestions(suggestion_response)
@@ -162,6 +167,34 @@ class DataSciencePro:
     
     def _display_engaging_suggestions(self, response: dict):
         """Display AI suggestions in an engaging, user-friendly format."""
+        
+        # Display comprehensive CSV analysis first
+        csv_analysis = response.get('csv_analysis', {})
+        if csv_analysis:
+            print(f"\n📊 **COMPREHENSIVE DATA ANALYSIS:**")
+            print(f"📈 **Data Quality Score:** {csv_analysis.get('data_quality_score', 'N/A')}/10")
+            print(f"🎯 **Modeling Readiness:** {csv_analysis.get('modeling_readiness', 'N/A')}/10")
+            
+            if 'critical_issues' in csv_analysis and csv_analysis['critical_issues']:
+                print(f"\n⚠️  **CRITICAL ISSUES IDENTIFIED:**")
+                for issue in csv_analysis['critical_issues']:
+                    print(f"   • {issue}")
+            
+            if 'key_insights' in csv_analysis and csv_analysis['key_insights']:
+                print(f"\n🔍 **KEY DATA INSIGHTS:**")
+                for insight in csv_analysis['key_insights']:
+                    print(f"   • {insight}")
+            
+            if 'preprocessing_recommendations' in csv_analysis and csv_analysis['preprocessing_recommendations']:
+                print(f"\n🛠️  **RECOMMENDED PREPROCESSING:**")
+                for rec in csv_analysis['preprocessing_recommendations']:
+                    print(f"   • {rec}")
+
+        # Display context summary
+        context_summary = response.get('context_summary', '')
+        if context_summary:
+            print(f"\n🧠 **CONTEXTUAL ANALYSIS:**")
+            print(f"{context_summary}")
         
         print(f"\n🧠 **STAGE:** {response.get('stage', 'unknown').replace('_', ' ').title()}")
         print(f"📊 **CONFIDENCE:** {response.get('confidence_score', 0):.1%}")
@@ -387,29 +420,90 @@ class DataSciencePro:
             self.model_instance.fit(self.X_train, self.y_train)
 
     def evaluate(self):
-        """Evaluates ML model."""
-        if self.model_instance is not None and self.X_test is not None and self.y_test is not None:
+        """
+        Evaluate the trained model with comprehensive metrics.
+        
+        Returns:
+            dict: Evaluation metrics
+        """
+        if self.model_instance is None:
+            raise ValueError("No model trained yet. Call train() first.")
+        
+        if self.X_test is None or self.y_test is None:
+            raise ValueError("No test data available. Ensure data is loaded and split.")
+        
+        # Make predictions
+        y_pred = self.model_instance.predict(self.X_test)
+        y_pred_proba = None
+        
+        # Get prediction probabilities if available
+        if hasattr(self.model_instance, 'predict_proba'):
             try:
-                y_pred = self.model_instance.predict(self.X_test)
-                if y_pred is None:
-                    raise ValueError("Model prediction returned None")
-                return self.evaluator.evaluate(self.y_test, y_pred)
-            except Exception as e:
-                print(f"❌ Evaluation error: {e}")
-                return {
-                    'accuracy': 0.0,
-                    'precision': 0.0,
-                    'recall': 0.0,
-                    'f1': 0.0
-                }
-        else:
-            print("⚠️  Cannot evaluate: Model or test data not available")
-            return {
-                'accuracy': 0.0,
-                'precision': 0.0,
-                'recall': 0.0,
-                'f1': 0.0
+                y_pred_proba = self.model_instance.predict_proba(self.X_test)
+            except:
+                pass
+        
+        # Calculate comprehensive metrics
+        metrics = self.evaluator.evaluate(self.y_test, y_pred, y_pred_proba)
+        
+        return metrics
+
+    def cross_validate(self, cv_folds=5):
+        """
+        Perform cross-validation with comprehensive metrics.
+        
+        Args:
+            cv_folds: Number of cross-validation folds
+            
+        Returns:
+            dict: Cross-validation metrics
+        """
+        if self.model_instance is None:
+            raise ValueError("No model trained yet. Call train() first.")
+        
+        if self.X_train is None or self.y_train is None:
+            raise ValueError("No training data available. Ensure data is loaded and split.")
+        
+        from sklearn.model_selection import cross_validate, StratifiedKFold
+        import numpy as np
+        
+        # Set up cross-validation
+        cv_strategy = StratifiedKFold(n_splits=cv_folds, shuffle=True, random_state=42)
+        
+        # Define scoring metrics
+        scoring = ['accuracy', 'precision', 'recall', 'f1']
+        
+        # Perform cross-validation
+        cv_results = cross_validate(
+            self.model_instance, self.X_train, self.y_train, 
+            cv=cv_strategy, scoring=scoring, 
+            return_train_score=True
+        )
+        
+        # Calculate comprehensive CV metrics
+        cv_metrics = {
+            'cv_folds': cv_folds,
+            'mean_accuracy': float(np.mean(cv_results['test_accuracy'])),
+            'std_accuracy': float(np.std(cv_results['test_accuracy'])),
+            'mean_precision': float(np.mean(cv_results['test_precision'])),
+            'std_precision': float(np.std(cv_results['test_precision'])),
+            'mean_recall': float(np.mean(cv_results['test_recall'])),
+            'std_recall': float(np.std(cv_results['test_recall'])),
+            'mean_f1': float(np.mean(cv_results['test_f1'])),
+            'std_f1': float(np.std(cv_results['test_f1'])),
+            'train_accuracy': float(np.mean(cv_results['train_accuracy'])),
+            'train_std': float(np.std(cv_results['train_accuracy'])),
+            'overfitting_score': float(np.mean(cv_results['train_accuracy']) - np.mean(cv_results['test_accuracy'])),
+            'stability_score': float(1 - (np.std(cv_results['test_accuracy']) / np.mean(cv_results['test_accuracy']))),
+            'all_scores': {
+                'test_accuracy': cv_results['test_accuracy'].tolist(),
+                'test_precision': cv_results['test_precision'].tolist(),
+                'test_recall': cv_results['test_recall'].tolist(),
+                'test_f1': cv_results['test_f1'].tolist()
             }
+        }
+        
+        return cv_metrics
 
     def test(self):
         """Tests ML model (could be same as evaluate or extended)."""

@@ -78,6 +78,9 @@ class IntelligentController:
         iteration = 0
         strategy_changes = 0
         
+        # Initialize iteration history tracking
+        self.iteration_history = []
+        
         while iteration < self.max_iterations:
             print(f"\n🔄 **ITERATION {iteration + 1}/{self.max_iterations}**")
             print(f"🎯 Current Strategy: {self.current_strategy}")
@@ -115,6 +118,16 @@ class IntelligentController:
             
             # Record workflow history
             self._record_iteration(iteration, current_metrics, self.current_strategy)
+            
+            # Track iteration history for comprehensive context
+            self.iteration_history.append({
+                'iteration': iteration + 1,
+                'metrics': current_metrics,
+                'strategy': self.current_strategy,
+                'timestamp': datetime.now(),
+                'stage': 'training_evaluation',
+                'actions_taken': ['strategy_execution', 'evaluation']
+            })
             
             iteration += 1
             
@@ -318,7 +331,9 @@ class IntelligentController:
             'iteration': iteration,
             'metrics': metrics,
             'strategy': strategy,
-            'timestamp': datetime.now()
+            'timestamp': datetime.now(),
+            'stage': 'training_evaluation',
+            'actions_taken': ['strategy_execution', 'evaluation']
         })
     
     def _print_workflow_summary(self, iterations, best_metric, strategy_changes, target_metric):
@@ -617,3 +632,272 @@ class Controller(InteractiveController):
 
 # Alias for backward compatibility
 CycleController = Controller
+
+    def titanic_comprehensive_workflow(self, data=None):
+        """
+        Comprehensive Titanic dataset workflow with multi-stage analysis.
+        
+        Args:
+            data: Optional Titanic dataset (will create sample if not provided)
+            
+        Returns:
+            tuple: (pipeline, complete_analysis_history)
+        """
+        print("🚢 TITANIC COMPREHENSIVE ANALYSIS WORKFLOW")
+        print("=" * 80)
+        
+        # Create sample data if not provided
+        if data is None:
+            data = self._create_titanic_sample_data()
+        
+        # Initialize pipeline
+        pipeline = Pipeline()
+        pipeline.load_data(data)
+        
+        # Update suggester with comprehensive context
+        if hasattr(pipeline.suggester, 'pipeline_history'):
+            pipeline.suggester.pipeline_history = self.iteration_history
+        
+        analysis_history = []
+        
+        # STAGE 1: Initial Comprehensive Analysis
+        print("\n🔍 STAGE 1: Initial Comprehensive Data Analysis")
+        print("-" * 60)
+        
+        stage1_query = """
+        I need a complete analysis of this Titanic dataset for survival prediction. 
+        Please provide comprehensive data quality assessment, feature distribution analysis, 
+        correlation analysis, data modeling readiness score, critical issues, and key insights 
+        about passenger demographics and survival patterns.
+        """
+        
+        print(f"📝 Query: Initial comprehensive analysis")
+        suggestions_1 = pipeline.suggestions(user_query=stage1_query, interactive=True)
+        analysis_history.append({'stage': 1, 'query': stage1_query, 'suggestions': suggestions_1})
+        
+        # STAGE 2: Preprocessing Strategy
+        print("\n🔧 STAGE 2: Intelligent Preprocessing Strategy")
+        print("-" * 60)
+        
+        stage2_query = """
+        Based on the data analysis, what preprocessing strategy should I implement?
+        Address missing value handling, feature engineering opportunities, categorical encoding, 
+        outlier treatment, class balancing strategy, and provide specific implementation steps.
+        """
+        
+        print(f"📝 Query: Preprocessing strategy")
+        suggestions_2 = pipeline.suggestions(user_query=stage2_query, interactive=True)
+        analysis_history.append({'stage': 2, 'query': stage2_query, 'suggestions': suggestions_2})
+        
+        # Apply preprocessing
+        print("\n🛠️ Implementing preprocessing...")
+        pipeline.preprocess()
+        
+        # STAGE 3: Post-Preprocessing Validation
+        print("\n📈 STAGE 3: Post-Preprocessing Validation")
+        print("-" * 60)
+        
+        stage3_query = """
+        Now that preprocessing is complete, analyze the transformed dataset.
+        Validate imputation effectiveness, assess feature engineering impact, 
+        check for new data quality issues, evaluate feature importance, 
+        and recommend final feature selection.
+        """
+        
+        print(f"📝 Query: Post-preprocessing validation")
+        suggestions_3 = pipeline.suggestions(user_query=stage3_query, interactive=True)
+        analysis_history.append({'stage': 3, 'query': stage3_query, 'suggestions': suggestions_3})
+        
+        # STAGE 4: Model Selection
+        print("\n🎯 STAGE 4: Intelligent Model Selection")
+        print("-" * 60)
+        
+        stage4_query = """
+        Given the preprocessed Titanic data characteristics, recommend the optimal modeling approach.
+        Provide primary algorithm recommendation, alternative algorithms, hyperparameter starting points, 
+        cross-validation strategy, ensemble possibilities, and expected performance benchmarks.
+        """
+        
+        print(f"📝 Query: Model selection strategy")
+        suggestions_4 = pipeline.suggestions(user_query=stage4_query, interactive=True)
+        analysis_history.append({'stage': 4, 'query': stage4_query, 'suggestions': suggestions_4})
+        
+        # STAGE 5: Training and Initial Evaluation
+        print("\n🏃 STAGE 5: Model Training and Initial Evaluation")
+        print("-" * 60)
+        
+        print("Training Random Forest model...")
+        pipeline.train_model()
+        initial_metrics = pipeline.evaluate()
+        
+        print(f"📊 Initial Performance: {initial_metrics.get('accuracy', 0):.1%} accuracy")
+        
+        stage5_query = f"""
+        My Random Forest achieved {initial_metrics.get('accuracy', 0):.1%} accuracy.
+        Provide performance assessment, overfitting detection, class imbalance impact analysis, 
+        feature importance insights, hyperparameter optimization strategy, and alternative recommendations.
+        """
+        
+        print(f"📝 Query: Performance analysis")
+        suggestions_5 = pipeline.suggestions(user_query=stage5_query, metrics=initial_metrics, interactive=True)
+        analysis_history.append({'stage': 5, 'query': stage5_query, 'suggestions': suggestions_5, 'metrics': initial_metrics})
+        
+        # STAGE 6: Cross-Validation Analysis
+        print("\n✅ STAGE 6: Cross-Validation and Stability Analysis")
+        print("-" * 60)
+        
+        print("Performing 5-fold cross-validation...")
+        cv_metrics = pipeline.cross_validate(cv_folds=5)
+        
+        stage6_query = f"""
+        Cross-validation shows {cv_metrics.get('mean_accuracy', 0):.1%} ± {cv_metrics.get('std_accuracy', 0):.1%} accuracy.
+        Analyze model stability, interpret variance across folds, assess overfitting, 
+        evaluate generalization, recommend stability improvements, and determine deployment readiness.
+        """
+        
+        print(f"📝 Query: CV stability analysis")
+        suggestions_6 = pipeline.suggestions(user_query=stage6_query, metrics=cv_metrics, interactive=True)
+        analysis_history.append({'stage': 6, 'query': stage6_query, 'suggestions': suggestions_6, 'metrics': cv_metrics})
+        
+        # STAGE 7: Business Insights
+        print("\n💼 STAGE 7: Business Insights and Interpretation")
+        print("-" * 60)
+        
+        stage7_query = """
+        Transform technical results into business insights about Titanic survival.
+        Provide key factors affecting survival, actionable maritime safety insights, 
+        risk assessment for passenger profiles, economic implications, historical validation, 
+        and modern ship safety recommendations.
+        """
+        
+        print(f"📝 Query: Business insights")
+        suggestions_7 = pipeline.suggestions(user_query=stage7_query, metrics=cv_metrics, interactive=True)
+        analysis_history.append({'stage': 7, 'query': stage7_query, 'suggestions': suggestions_7})
+        
+        # STAGE 8: Deployment Strategy
+        print("\n🚀 STAGE 8: Deployment Strategy and Final Recommendations")
+        print("-" * 60)
+        
+        stage8_query = """
+        Provide comprehensive deployment strategy including monitoring plan, 
+        performance tracking, data drift detection, retraining triggers, A/B testing, 
+        risk mitigation, documentation, and regulatory compliance.
+        """
+        
+        print(f"📝 Query: Deployment strategy")
+        suggestions_8 = pipeline.suggestions(user_query=stage8_query, metrics=cv_metrics, interactive=True)
+        analysis_history.append({'stage': 8, 'query': stage8_query, 'suggestions': suggestions_8})
+        
+        # Final Summary
+        print("\n" + "="*80)
+        print("📋 TITANIC ANALYSIS COMPLETE")
+        print("="*80)
+        print(f"🎯 Final Model Performance: {cv_metrics.get('mean_accuracy', 0):.1%} ± {cv_metrics.get('std_accuracy', 0):.1%}")
+        print(f"📊 Total Analysis Stages: {len(analysis_history)}")
+        print(f"🔍 Complex Queries Processed: {len([h for h in analysis_history if h.get('suggestions', {}).get('query_complexity', {}).get('level') == 'high'])}")
+        print(f"💡 Business Insights Generated: Maritime safety recommendations")
+        print(f"🚀 Deployment Ready: Complete strategy provided")
+        
+        return pipeline, analysis_history
+
+    def _create_titanic_sample_data(self):
+        """Create realistic Titanic dataset sample."""
+        np.random.seed(42)
+        n_samples = 891
+        
+        # Generate realistic Titanic data patterns
+        pclass = np.random.choice([1, 2, 3], n_samples, p=[0.24, 0.21, 0.55])
+        sex = np.random.choice(['male', 'female'], n_samples, p=[0.65, 0.35])
+        
+        # Age with missing values
+        age_base = np.random.normal(30, 12, n_samples)
+        age = []
+        for i in range(n_samples):
+            if np.random.random() < 0.2:
+                age.append(np.nan)
+            else:
+                age.append(max(0.5, min(80, age_base[i])))
+        
+        sibsp = np.random.choice([0, 1, 2, 3, 4, 5, 8], n_samples, p=[0.68, 0.20, 0.08, 0.02, 0.01, 0.005, 0.005])
+        parch = np.random.choice([0, 1, 2, 3, 4, 5, 6], n_samples, p=[0.76, 0.13, 0.08, 0.02, 0.005, 0.005, 0.005])
+        
+        # Fare with class-based patterns
+        fare_base = np.random.lognormal(3, 1, n_samples)
+        fare = []
+        for i in range(n_samples):
+            fare_val = fare_base[i]
+            if pclass[i] == 1:
+                fare_val *= 3
+            elif pclass[i] == 2:
+                fare_val *= 1.5
+            fare.append(max(0, fare_val))
+        
+        # Cabin with many missing values
+        cabin = []
+        for i in range(n_samples):
+            if np.random.random() < 0.77:
+                cabin.append(np.nan)
+            else:
+                deck = np.random.choice(['A', 'B', 'C', 'D', 'E', 'F', 'G', 'T'])
+                number = np.random.randint(1, 200)
+                cabin.append(f"{deck}{number}")
+        
+        # Embarked
+        embarked = np.random.choice(['C', 'Q', 'S'], n_samples, p=[0.19, 0.09, 0.72])
+        
+        # Names with titles
+        names = []
+        for i in range(n_samples):
+            if sex[i] == 'male':
+                title = 'Master.' if age[i] and age[i] < 15 else np.random.choice(['Mr.', 'Dr.', 'Rev.'], p=[0.9, 0.08, 0.02])
+            else:
+                title = 'Miss.' if age[i] and age[i] < 18 else np.random.choice(['Mrs.', 'Miss.'], p=[0.7, 0.3])
+            
+            first_names = ['John', 'William', 'James', 'George', 'Charles', 'Frank', 'Joseph', 'Henry', 'Robert', 'Thomas']
+            female_names = ['Mary', 'Anna', 'Elizabeth', 'Margaret', 'Ruth', 'Florence', 'Ethel', 'Emma', 'Marie', 'Lillian']
+            
+            if sex[i] == 'male':
+                name = f"{title} {np.random.choice(first_names)} {np.random.choice(['Smith', 'Johnson', 'Brown', 'Davis', 'Miller'])}"
+            else:
+                name = f"{title} {np.random.choice(female_names)} {np.random.choice(['Smith', 'Johnson', 'Brown', 'Davis', 'Miller'])}"
+            
+            names.append(name)
+        
+        # Survival with realistic patterns
+        survived = []
+        for i in range(n_samples):
+            survival_prob = 0.38
+            
+            if pclass[i] == 1:
+                survival_prob += 0.3
+            elif pclass[i] == 2:
+                survival_prob += 0.1
+            
+            if sex[i] == 'female':
+                survival_prob += 0.35
+            
+            if age[i] and age[i] < 16:
+                survival_prob += 0.15
+            
+            if sibsp[i] == 0 and parch[i] == 0:
+                survival_prob -= 0.1
+            
+            if fare[i] > 50:
+                survival_prob += 0.1
+            
+            survival_prob = max(0.05, min(0.95, survival_prob))
+            survived.append(int(np.random.random() < survival_prob))
+        
+        return pd.DataFrame({
+            'PassengerId': range(1, n_samples + 1),
+            'Survived': survived,
+            'Pclass': pclass,
+            'Name': names,
+            'Sex': sex,
+            'Age': age,
+            'SibSp': sibsp,
+            'Parch': parch,
+            'Fare': fare,
+            'Cabin': cabin,
+            'Embarked': embarked
+        })
