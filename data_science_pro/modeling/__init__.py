@@ -1,5 +1,5 @@
 from .trainer import Trainer
 from .evaluator import Evaluator
-from .registry import ModelRegistry
+from .registry import Registry
 
-__all__ = ["Trainer", "Evaluator", "ModelRegistry"]
+__all__ = ["Trainer", "Evaluator", "Registry"]

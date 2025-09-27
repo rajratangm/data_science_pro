@@ -58,7 +58,7 @@ print("✅ Data Science Pro installed successfully!")
 
 # Step 1.7: Check available components
 from data_science_pro.data import DataAnalyzer, DataLoader, DataOperations
-from data_science_pro.modeling import Trainer, Evaluator, ModelRegistry  
+from data_science_pro.modeling import Trainer, Evaluator, Registry  
 from data_science_pro.cycle import IntelligentController, ChainOfThoughtSuggester
 print("✅ All modules imported successfully!")
 ```
