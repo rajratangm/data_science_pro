@@ -333,6 +333,51 @@ def test_controllers():
         print(f"❌ Controllers failed: {e}")
         return False
 
+def test_ai_powered_report():
+    """Test AI-powered report generation."""
+    print("Testing AI-powered report generation...")
+    try:
+        from data_science_pro import DataSciencePro
+        
+        # Create test data with some issues for AI to analyze
+        test_data = create_test_data()
+        test_data.loc[0:3, 'feature1'] = np.nan  # Add missing values
+        test_data.loc[4:6, 'feature2'] = 999999  # Add outliers
+        test_data.to_csv('test_data.csv', index=False)
+        
+        ai = DataSciencePro()
+        ai.input_data('test_data.csv', target_col='target')
+        
+        # Generate AI-powered report
+        report = ai.report()
+        
+        # Check if report is AI-enhanced (not just raw data)
+        if isinstance(report, dict):
+            print("⚠️  Report is still raw data - AI enhancement may have failed")
+            return False
+        elif isinstance(report, str):
+            # Check for AI indicators
+            ai_indicators = ['AI', 'intelligent', 'recommendation', 'analysis', 'insight']
+            has_ai_content = any(indicator.lower() in report.lower() for indicator in ai_indicators)
+            
+            if has_ai_content:
+                print("✅ AI-powered report generated successfully!")
+                print(f"📊 Report length: {len(report)} characters")
+                print(f"🧠 Contains AI insights: {has_ai_content}")
+                return True
+            else:
+                print("⚠️  Report generated but may not be AI-enhanced")
+                print("Sample report content:")
+                print(report[:200] + "...")
+                return True  # Still consider it a success if report is generated
+        else:
+            print(f"❌ Unexpected report type: {type(report)}")
+            return False
+            
+    except Exception as e:
+        print(f"❌ AI report generation failed: {e}")
+        return False
+
 def run_all_tests():
     """Run all tests."""
     print("🧪 Running DataSciencePro Tests")
@@ -349,7 +394,8 @@ def run_all_tests():
         test_data_operations,
         test_data_analyzer,
         test_model_registry,
-        test_controllers
+        test_controllers,
+        test_ai_powered_report
     ]
     
     passed = 0

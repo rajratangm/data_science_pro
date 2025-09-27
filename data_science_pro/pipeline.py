@@ -48,8 +48,31 @@ class DataSciencePro:
         self.target_col = target_col
 
     def report(self):
-        """Generates dynamic analysis reports."""
-        return self.analyzer.analyze(self.data)
+        """Generates AI-powered dynamic analysis reports."""
+        analysis_results = self.analyzer.analyze(self.data)
+        
+        # Use AI-powered report generator for intelligent insights
+        try:
+            from .cycle.reporter import ReportGenerator
+            reporter = ReportGenerator()
+            
+            # Get model performance if available
+            model_performance = None
+            if self.model_instance is not None and self.X_test is not None:
+                try:
+                    model_performance = self.evaluate()
+                except:
+                    pass
+            
+            # Generate AI-powered report
+            ai_report = reporter.generate_report(analysis_results, model_performance)
+            return ai_report
+            
+        except Exception as e:
+            # Fallback to basic analysis with a warning
+            print(f"⚠️  AI report generation failed: {e}")
+            print("📊 Falling back to basic analysis...")
+            return analysis_results
 
     def suggestions(self, user_query=None, metrics=None, interactive=True):
         """
