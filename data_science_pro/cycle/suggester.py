@@ -5,7 +5,7 @@ from langchain_community.llms import OpenAI
 import json
 import pandas as pd
 from typing import Dict, List, Any
-
+from datetime import datetime
 class ChainOfThoughtSuggester:
     """
     Advanced AI agent that provides sophisticated, chain-of-thought reasoning for data science workflows.
@@ -92,10 +92,10 @@ class ChainOfThoughtSuggester:
         """
         
         # Generate comprehensive CSV analysis if data is available
-        csv_analysis = self._generate_comprehensive_csv_analysis(analyzer_result, csv_data, metrics) if csv_data is not None and not csv_data.empty else None
+        csv_analysis = self._generate_comprehensive_csv_analysis(analyzer_result, csv_data, metrics)
         
         # Update conversation history and context with comprehensive information
-        self._update_context(analyzer_result, user_query, metrics, csv_analysis)
+        self._update_context(analyzer_result, user_query, metrics)
         
         # Determine current workflow stage and appropriate reasoning chain
         current_stage = self._determine_workflow_stage()

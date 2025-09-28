@@ -3,9 +3,9 @@ import json
 
 class ReportGenerator:
     
-    def __init__(self):
+    def __init__(self, api_key):
         try:
-            self.llm = LLMConnector()
+            self.llm = LLMConnector(api_key=api_key)
         except Exception as e:
             print(f"⚠️  LLM initialization failed: {e}")
             self.llm = None
@@ -14,10 +14,12 @@ class ReportGenerator:
         """Generate AI-powered data analysis report with intelligent insights."""
         
         if self.llm is None:
+            print("⚠️  LLM not available, generating basic report.")
             return self._generate_fallback_report(analysis_results, model_performance)
         
         try:
             # Create comprehensive prompt for AI analysis
+            print("🧠 Generating AI-powered report...")
             prompt = self._create_analysis_prompt(analysis_results, model_performance)
             
             # Generate AI-powered insights

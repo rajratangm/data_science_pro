@@ -14,6 +14,7 @@ from sklearn.linear_model import LogisticRegression
 
 class DataSciencePro:
     def __init__(self, api_key=None):
+        self.api_key = api_key
         self.llm = None
         self.memory = None
         self.data = None
@@ -35,7 +36,7 @@ class DataSciencePro:
     def api(self, api_key: str = None):
         """Initializes LangChain LLM + memory."""
         if api_key:
-            self.llm = LLMConnector(api_key)
+            self.llm = LLMConnector(api_key=api_key)
         self.memory = []
         # Initialize controller with API key for enhanced workflows
         from data_science_pro.cycle.controller import IntelligentController
@@ -54,7 +55,7 @@ class DataSciencePro:
         # Use AI-powered report generator for intelligent insights
         try:
             from .cycle.reporter import ReportGenerator
-            reporter = ReportGenerator()
+            reporter = ReportGenerator(api_key=self.api_key)
             
             # Get model performance if available
             model_performance = None
@@ -74,7 +75,7 @@ class DataSciencePro:
             print("📊 Falling back to basic analysis...")
             return analysis_results
 
-    def suggestions(self, user_query=None, metrics=None, interactive=True):
+    def suggestions(self, user_query=None, metrics=None, interactive=True, report=None):
         """
         Advanced AI-powered suggestions with chain-of-thought reasoning and engaging interaction.
         
@@ -87,30 +88,32 @@ class DataSciencePro:
         print("=" * 50)
         
         # Get comprehensive analysis
+        if report is not None:
+            analyzer_result = report
         analyzer_result = self.report()
         
         # Handle case where report() returns a string (fallback mode)
-        if isinstance(analyzer_result, str):
+        if analyzer_result is None:
             print("⚠️  Running in basic mode due to AI initialization issues.")
             print("📊 Using raw data analysis for suggestions...")
             # Convert back to basic analysis for suggester
             analyzer_result = self.analyzer.analyze(self.data)
         
-        if user_query is None and interactive:
-            print("\n🎯 What would you like to achieve with your data?")
-            print("💡 Examples: 'I want to improve accuracy', 'Reduce overfitting', 'Handle missing values better'")
-            user_query = input("📝 Your goal: ").strip()
+        # if user_query is None and interactive:
+        #     print("\n🎯 What would you like to achieve with your data?")
+        #     print("💡 Examples: 'I want to improve accuracy', 'Reduce overfitting', 'Handle missing values better'")
+        #     user_query = input("📝 Your goal: ").strip()
             
-            if not user_query:
-                user_query = "improve model performance and data quality"
-                print(f"🔄 Using default goal: {user_query}")
+        #     if not user_query:
+        #         user_query = "improve model performance and data quality"
+        #         print(f"🔄 Using default goal: {user_query}")
 
         # Get sophisticated chain-of-thought suggestions with comprehensive CSV analysis
         suggestion_response = self.suggester.suggest_next_action(
             analyzer_result, 
             user_query, 
             metrics,
-            csv_data=self.data if hasattr(self, 'data') and self.data is not None and not self.data.empty else None
+            csv_data=self.data
         )
         
         if interactive:
@@ -235,128 +238,6 @@ class DataSciencePro:
         print("\n" + "="*60)
         print("🚀 Ready to take action? Choose your next step!")
     
-    def interactive_workflow(self, target_metric='accuracy', target_value=0.85):
-        """
-        Fully interactive workflow that guides user through complete data science process.
-        
-        Args:
-            target_metric: Which metric to optimize ('accuracy', 'precision', 'recall', 'f1')
-            target_value: Target value for the metric
-        """
-        print("🎉 **WELCOME TO INTERACTIVE DATA SCIENCE WORKFLOW!** 🎉")
-        print("="*60)
-        print("I'm your AI data scientist assistant. Let's build an amazing model together! 🤝")
-        print()
-        
-        step = 1
-        while True:
-            print(f"\n📍 **STEP {step}: Current Status Check**")
-            print("-" * 40)
-            
-            # Get current metrics if model exists
-            current_metrics = None
-            if self.model_instance is not None and self.X_test is not None:
-                try:
-                    current_metrics = self.evaluate()
-                    print(f"📊 Current Performance:")
-                    for metric, value in current_metrics.items():
-                        print(f"   • {metric.title()}: {value:.4f}")
-                    
-                    # Check if target is achieved
-                    if target_metric in current_metrics:
-                        if current_metrics[target_metric] >= target_value:
-                            print(f"\n🎊 **CONGRATULATIONS! Target achieved!** 🎊")
-                            print(f"   {target_metric.title()}: {current_metrics[target_metric]:.4f} >= {target_value}")
-                            break
-                        else:
-                            print(f"\n🎯 Target: {target_metric.title()} >= {target_value}")
-                            print(f"📈 Current: {current_metrics[target_metric]:.4f} - Keep optimizing!")
-                except:
-                    pass
-            
-            # Get AI suggestions
-            user_goal = input(f"\n🎯 What's your main goal right now? (or press Enter for AI suggestions): ").strip()
-            if not user_goal:
-                user_goal = f"improve {target_metric} to reach {target_value}"
-            
-            print(f"\n🤖 **Getting AI recommendations...**")
-            suggestions = self.suggestions(user_query=user_goal, metrics=current_metrics, interactive=True)
-            
-            # Let user choose next action
-            print(f"\n🎮 **Choose your next action:**")
-            available_actions = suggestions.get('next_actions', []) if isinstance(suggestions, dict) and 'next_actions' in suggestions else []
-            
-            if available_actions:
-                for i, action in enumerate(available_actions, 1):
-                    print(f"   {i}. ⚡ {action}")
-                print(f"   {len(available_actions)+1}. 🔄 Get different suggestions")
-                print(f"   {len(available_actions)+2}. 🛑 Finish workflow")
-                
-                choice = input(f"\n📝 Your choice (1-{len(available_actions)+2}): ").strip()
-            else:
-                print("   1. 🔄 Get different suggestions")
-                print("   2. 🛑 Finish workflow")
-                choice = input(f"\n📝 Your choice (1-2): ").strip()
-                available_actions = []
-            
-            if choice.isdigit():
-                choice_num = int(choice)
-                if available_actions and 1 <= choice_num <= len(available_actions):
-                    selected_action = available_actions[choice_num-1]
-                    print(f"\n🚀 **Executing: {selected_action}**")
-                    
-                    if selected_action in ['randomforest', 'logisticregression']:
-                        # Model selection
-                        if selected_action == 'randomforest':
-                            self.set_model('randomforest', {'n_estimators': 200, 'max_depth': 15})
-                        else:
-                            self.set_model('logisticregression', {'C': 1.0, 'max_iter': 1000})
-                        print("✅ Model configured!")
-                        
-                    elif selected_action in ['drop_na', 'fill_na', 'encode_categorical', 'scale_numeric', 'feature_gen']:
-                        # Preprocessing action
-                        self.apply_action(selected_action)
-                        print(f"✅ Action '{selected_action}' completed!")
-                        print(f"📊 New data shape: {self.data.shape}")
-                        
-                    elif selected_action == 'train':
-                        # Training
-                        print("🏋️‍♂️ Training model...")
-                        self.train()
-                        print("✅ Training completed!")
-                        
-                    elif selected_action == 'evaluate':
-                        # Evaluation
-                        results = self.evaluate()
-                        print("📊 Evaluation Results:")
-                        for metric, value in results.items():
-                            print(f"   • {metric.title()}: {value:.4f}")
-                    
-                elif choice_num == (len(available_actions) + 1 if available_actions else 1):
-                    print("🔄 Getting new suggestions...")
-                    continue
-                elif choice_num == (len(available_actions) + 2 if available_actions else 2):
-                    print("\n🎉 **Workflow completed!** Great job! 🎉")
-                    break
-            
-            step += 1
-            
-            # Prevent infinite loops
-            if step > 20:
-                print("\n⚠️  Maximum steps reached. Consider adjusting your target or approach.")
-                break
-        
-        # Final summary
-        print(f"\n📋 **WORKFLOW SUMMARY:**")
-        print(f"🎯 Target: {target_metric} >= {target_value}")
-        if current_metrics and target_metric in current_metrics:
-            print(f"🏆 Final {target_metric.title()}: {current_metrics[target_metric]:.4f}")
-            if current_metrics[target_metric] >= target_value:
-                print("🎊 **TARGET ACHIEVED!** 🎊")
-            else:
-                print("📈 Good progress! Consider further optimization.")
-        print("\n✨ **Thank you for using AI-Powered Data Science!** ✨")
-
     def apply_action(self, action_id):
         """Applies preprocessing operation using DataOperations."""
         # Use DataOperations for all preprocessing
