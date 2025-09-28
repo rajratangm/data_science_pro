@@ -38,45 +38,8 @@ venv\Scripts\activate
 # On macOS/Linux:
 source venv/bin/activate
 
-# Step 1.4: Install the package in development mode
-pip install -e .
 
-# Step 1.5: Verify installation
-python -c "import data_science_pro; print('✅ Installation successful!')"
-```
 
-### Option B: Install from PyPI (when published)
-```bash
-pip install data-science-pro
-```
-
-### Installation Verification
-```python
-# Step 1.6: Test the installation
-import data_science_pro
-print("✅ Data Science Pro installed successfully!")
-
-# Step 1.7: Check available components
-from data_science_pro.data import DataAnalyzer, DataLoader, DataOperations
-from data_science_pro.modeling import Trainer, Evaluator, Registry  
-from data_science_pro.cycle import IntelligentController, ChainOfThoughtSuggester
-print("✅ All modules imported successfully!")
-```
-
-## 🚀 Step 2: Quick Start - Your First AI-Powered Analysis
-
-### Method 1: Command Line Interface (CLI)
-```bash
-# Step 2.1: Basic usage with your data
-data-science-pro --data your_data.csv --target target_column --api_key your_openai_key
-
-# What this does automatically:
-# 1. Load your dataset
-# 2. Generate comprehensive EDA report
-# 3. Apply smart preprocessing (handle missing values, encode categoricals, scale features)
-# 4. Train multiple models and select the best one
-# 5. Display detailed evaluation metrics and insights
-```
 
 ### Method 2: Python API (Interactive Mode)
 ```python
@@ -104,18 +67,6 @@ print("🤖 AI Suggestions:", suggestions)
 
 ```python
 # Step 3.1: Load sample data (Titanic dataset example)
-import pandas as pd
-import numpy as np
-from sklearn.datasets import fetch_openml
-
-# Load Titanic dataset as example
-titanic = fetch_openml('titanic', version=1, as_frame=True)
-df = titanic.frame
-print(f"Dataset shape: {df.shape}")
-print(f"Missing values: {df.isnull().sum().sum()}")
-
-# Save for testing
-df.to_csv('titanic_sample.csv', index=False)
 
 # Step 3.2: Initialize pipeline
 pipeline = data_science_pro.DataSciencePro(api_key='your-openai-key')
@@ -153,7 +104,7 @@ pipeline.set_model('randomforest', {
     'min_samples_leaf': 2,
     'random_state': 42
 })
-pipeline.train_model()
+pipeline.train()
 
 # Step 4.2: Evaluate the model
 print("📊 Evaluating Random Forest...")
@@ -230,16 +181,16 @@ for iteration in range(max_iterations):
             print("Trying XGBoost...")
             import xgboost as xgb
             pipeline.set_model('xgboost', {'max_depth': 6, 'n_estimators': 300})
-            pipeline.train_model()
+            pipeline.train()
         except ImportError:
             print("XGBoost not available, trying different RandomForest parameters")
             pipeline.set_model('randomforest', {'n_estimators': 300, 'max_depth': 20})
-            pipeline.train_model()
+            pipeline.train()
     
     elif 'feature' in suggestions.lower():
         print("Applying feature engineering...")
         pipeline.apply_action('feature_gen')
-        pipeline.train_model()
+        pipeline.train()
     
     elif 'hyperparameter' in suggestions.lower():
         print("Trying different hyperparameters...")
@@ -248,7 +199,7 @@ for iteration in range(max_iterations):
             'max_depth': 25,
             'min_samples_split': 3
         })
-        pipeline.train_model()
+        pipeline.train()
 
 print("\n🎉 Cyclic workflow completed!")
 ```
@@ -446,7 +397,7 @@ print("\n🏃 STAGE 5: Model Training and Initial Evaluation")
 print("-" * 60)
 
 # Train initial model
-pipeline.train_model()
+pipeline.train()
 initial_metrics = pipeline.evaluate()
 
 stage5_query = f"""
@@ -611,7 +562,7 @@ individual_results = {}
 for name, model in models.items():
     print(f"\n🎯 Training {name}...")
     pipeline.set_model(name, model.get_params())
-    pipeline.train_model()
+    pipeline.train()
     individual_results[name] = pipeline.evaluate()
     print(f"   Accuracy: {individual_results[name].get('accuracy', 0):.3f}")
 
@@ -630,7 +581,7 @@ voting_clf = VotingClassifier(
 # Train ensemble
 pipeline.set_model('voting_classifier', voting_clf.get_params())
 pipeline.model_instance = voting_clf
-pipeline.train_model()
+pipeline.train()
 ensemble_results = pipeline.evaluate()
 
 print(f"\n📊 Ensemble Results:")
@@ -740,7 +691,7 @@ print("=" * 75)
 pipeline = data_science_pro.DataScience_pro(api_key='your-openai-key')
 pipeline.load_data(your_data)
 pipeline.preprocess()
-pipeline.train_model()
+pipeline.train()
 
 # Get comprehensive diagnostics recommendations
 diagnostics_query = """
@@ -1452,7 +1403,7 @@ def advanced_analytics_with_reasoning(data, analysis_goal):
     
     # Step 5: Results Interpretation with Business Reasoning
     pipeline.preprocess()
-    pipeline.train_model()
+    pipeline.train()
     results = pipeline.evaluate()
     
     interpretation_query = f"""
@@ -1662,7 +1613,7 @@ def comprehensive_test():
     print("7️⃣ Testing model training...")
     try:
         pipeline.set_model('randomforest', {'n_estimators': 10, 'random_state': 42})
-        pipeline.train_model()
+        pipeline.train()
         print("   ✅ Model training successful")
     except Exception as e:
         print(f"   ⚠️  Model training: {e}")
@@ -1726,7 +1677,7 @@ for dataset in datasets:
     pipeline.input_data(dataset, target_col='target')
     pipeline.apply_action('fill_na')
     pipeline.set_model('randomforest')
-    pipeline.train_model()
+    pipeline.train()
     result = pipeline.evaluate_model()
     results.append({dataset: result})
 
