@@ -1,17 +1,25 @@
-# from langchain.llms import OpenAI
-from langchain_community.chat_models import ChatOpenAI
-from dotenv import load_dotenv
-import os
+from langchain_openai import ChatOpenAI
+import time
 
 class LLMConnector:
-    load_dotenv()
-    def __init__(self, api_key=None):
-        self.api_key = api_key or os.getenv("OPENAI_API_KEY")
-        self.model_name = os.getenv("OPENAI_MODEL_NAME", "gpt-3.5-turbo")
-        self.temperature = float(os.getenv("OPENAI_TEMPERATURE", "0.7"))
-        self.llm = ChatOpenAI(openai_api_key=self.api_key, model_name=self.model_name, temperature=self.temperature)
+    def __init__(self, api_key: str, model: str = "gpt-4o-mini"):
+        self.llm = ChatOpenAI(api_key=api_key, model=model)
 
-    def generate_response(self, prompt):
-        # For chat models, pass a list of messages
-        response = self.llm.invoke([{"role": "user", "content": prompt}])
-        return response.content if hasattr(response, "content") else response
+    def run(self, prompt: str, context: dict = None, retries: int = 2, backoff_sec: float = 1.0):
+        """
+        Run an LLM call with optional context (like dataset metadata).
+        """
+        full_prompt = prompt
+        if context:
+            full_prompt += f"\n\nContext:\n{context}"
+        last_err = None
+        for attempt in range(retries + 1):
+            try:
+                response = self.llm.invoke(full_prompt)
+                return response.content
+            except Exception as e:
+                last_err = e
+                if attempt < retries:
+                    time.sleep(backoff_sec * (2 ** attempt))
+                else:
+                    raise last_err

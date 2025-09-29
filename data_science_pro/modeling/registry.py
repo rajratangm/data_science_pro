@@ -1,7 +1,7 @@
 import os
 import joblib
 
-class Registry:
+class ModelRegistry:
     def __init__(self, registry_dir='model_registry'):
         self.registry_dir = registry_dir
         os.makedirs(self.registry_dir, exist_ok=True)
