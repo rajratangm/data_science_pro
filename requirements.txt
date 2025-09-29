@@ -1,9 +1,12 @@
 pandas
 numpy
 scikit-learn
-imblearn
+imbalanced-learn
 joblib
 langchain
 langchain-community
+langchain-openai
+langgraph
+chromadb
 python-dotenv
 openai

@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name='data_science_pro',
-    version='0.1.25',
+    version='0.2.0',
     description='LLM-powered modular data science pipeline',
     long_description=long_description,
     long_description_content_type='text/markdown',
@@ -13,12 +13,17 @@ setup(
     packages=find_packages(),
     install_requires=[
         'pandas',
+        'numpy',
         'scikit-learn',
-        'langchain',
-        'openai',
-        'python-dotenv',
+        'imbalanced-learn',
         'joblib',
-        'imbalanced-learn'
+        'langchain',
+        'langchain-community',
+        'langchain-openai',
+        'langgraph',
+        'chromadb',
+        'openai',
+        'python-dotenv'
     ],
     entry_points={
         'console_scripts': [
